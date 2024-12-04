@@ -32,6 +32,21 @@ func (r Report) IsSafe() bool {
 	return true
 }
 
+func (r Report) RemoveByIndex(index int) Report {
+	levels := make([]int, 0, len(r.levels)-1)
+	for i, level := range r.levels {
+		if i == index {
+			continue
+		}
+		levels = append(levels, level)
+	}
+	return Report{levels: levels}
+}
+
+func (r Report) Length() int {
+	return len(r.levels)
+}
+
 func ParseInput(fileName string) ([]Report, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
