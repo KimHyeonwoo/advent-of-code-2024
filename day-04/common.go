@@ -48,6 +48,41 @@ func (b Board) HasXMAS(x, y, dx, dy int) bool {
 	return true
 }
 
+func (b Board) HasTwoMASInXShape(x, y int) bool {
+	if x <= 0 || x >= b.Width-1 || y <= 0 || y >= b.Height-1 {
+		return false
+	}
+
+	if b.Board[y][x] != 'A' {
+		return false
+	}
+
+	directions := [4][2]int{
+		{1, 1},
+		{-1, 1},
+		{-1, -1},
+		{1, -1},
+	}
+
+	mCount := 0
+	sCount := 0
+
+	for _, direction := range directions {
+		if b.Board[y+direction[1]][x+direction[0]] == 'M' {
+			mCount++
+		}
+		if b.Board[y+direction[1]][x+direction[0]] == 'S' {
+			sCount++
+		}
+	}
+
+	if b.Board[y+1][x+1] == b.Board[y-1][x-1] {
+		return false
+	}
+
+	return mCount == 2 && sCount == 2
+}
+
 func ParseInput(fileName string) (Board, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
