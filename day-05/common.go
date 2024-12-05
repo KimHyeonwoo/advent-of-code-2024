@@ -3,7 +3,9 @@ package common
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -11,6 +13,65 @@ import (
 type OrderRule struct {
 	Before int
 	After  int
+}
+
+type OrderRules []OrderRule
+
+func (o OrderRules) GetRulesFor(update Update) OrderRules {
+	var rules OrderRules
+	for _, rule := range o {
+		if slices.Contains(update.Pages, rule.Before) && slices.Contains(update.Pages, rule.After) {
+			rules = append(rules, rule)
+		}
+	}
+
+	return rules
+}
+
+func (o OrderRules) GetTopology() ([]int, error) {
+	inDegrees := make(map[int]int)
+	nodes := make(map[int]struct{})
+
+	for _, rule := range o {
+		inDegrees[rule.After]++
+		nodes[rule.Before] = struct{}{}
+		nodes[rule.After] = struct{}{}
+	}
+
+	var queue []int
+	for node := range nodes {
+		if _, ok := inDegrees[node]; !ok {
+			inDegrees[node] = 0
+		}
+
+		if inDegrees[node] == 0 {
+			queue = append(queue, node)
+		}
+	}
+
+	var sorted []int
+
+	for len(queue) > 0 {
+		node := queue[0]
+		queue = queue[1:]
+		sorted = append(sorted, node)
+
+		for _, rule := range o {
+			if rule.Before == node {
+				inDegrees[rule.After]--
+				if inDegrees[rule.After] == 0 {
+					queue = append(queue, rule.After)
+				}
+			}
+		}
+	}
+
+	if len(sorted) != len(inDegrees) {
+		fmt.Println(sorted)
+		return nil, errors.New("cycle detected")
+	}
+
+	return sorted, nil
 }
 
 type Update struct {
@@ -36,7 +97,7 @@ func (u Update) GetMiddleElement() int {
 	return u.Pages[len(u.Pages)/2]
 }
 
-func ParseInput(fileName string) ([]OrderRule, []Update, error) {
+func ParseInput(fileName string) (OrderRules, []Update, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, nil, err
@@ -44,7 +105,7 @@ func ParseInput(fileName string) ([]OrderRule, []Update, error) {
 	defer file.Close()
 
 	var isOrderRule = true
-	var orderRules []OrderRule
+	var orderRules OrderRules
 	var updates []Update
 
 	scanner := bufio.NewScanner(file)
