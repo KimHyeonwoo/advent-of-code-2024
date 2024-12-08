@@ -21,9 +21,14 @@ type Map struct {
 	GuardDirCol int
 }
 
-func (m *Map) Traverse() {
-	for m.MoveGuard() {
+func (m *Map) Traverse() bool {
+	counter := 0
+	counterLimit := 4*len(m.Cells)*len(m.Cells[0]) + 1
+	for m.MoveGuard() && counter < counterLimit {
+		counter++
 	}
+
+	return counter < counterLimit
 }
 
 func (m *Map) MoveGuard() bool {
