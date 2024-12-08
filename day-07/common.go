@@ -2,6 +2,7 @@ package common
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -12,7 +13,15 @@ type Equation struct {
 	Numbers []int
 }
 
-func (e Equation) IsValid() bool {
+func (e Equation) String() string {
+	return strconv.Itoa(e.Target) + ": " + strings.Join(strings.Fields(fmt.Sprint(e.Numbers)), " ")
+}
+
+type Option struct{}
+
+var OptionActivateConcatenation = Option{}
+
+func (e Equation) IsValid(options ...Option) bool {
 	if len(e.Numbers) == 0 {
 		return false
 	}
@@ -27,21 +36,46 @@ func (e Equation) IsValid() bool {
 		Numbers: e.Numbers[:len(e.Numbers)-1],
 	}
 
-	if plusEquation.IsValid() {
+	if plusEquation.IsValid(options...) {
 		return true
 	}
 
 	// Multiply case
-	if e.Target%e.Numbers[len(e.Numbers)-1] != 0 {
+	if e.Target%e.Numbers[len(e.Numbers)-1] == 0 {
+		multiplyEquation := Equation{
+			Target:  e.Target / e.Numbers[len(e.Numbers)-1],
+			Numbers: e.Numbers[:len(e.Numbers)-1],
+		}
+
+		if multiplyEquation.IsValid(options...) {
+			return true
+		}
+
+		if len(options) == 0 || options[0] != OptionActivateConcatenation {
+			return false
+		}
+	}
+
+	// Concatenate case
+	targetStr := strconv.Itoa(e.Target)
+	lastNumberStr := strconv.Itoa(e.Numbers[len(e.Numbers)-1])
+
+	if !strings.HasSuffix(targetStr, lastNumberStr) {
 		return false
 	}
 
-	multiplyEquation := Equation{
-		Target:  e.Target / e.Numbers[len(e.Numbers)-1],
+	newTargetStr := targetStr[:len(targetStr)-len(lastNumberStr)]
+	newTarget, err := strconv.Atoi(newTargetStr)
+	if err != nil {
+		return false
+	}
+
+	concatenateEquation := Equation{
+		Target:  newTarget,
 		Numbers: e.Numbers[:len(e.Numbers)-1],
 	}
 
-	return multiplyEquation.IsValid()
+	return concatenateEquation.IsValid(options...)
 }
 
 func ParseInput(fileName string) ([]Equation, error) {
