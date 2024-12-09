@@ -31,6 +31,50 @@ func (d *Disk) Compact() {
 	}
 }
 
+func (d *Disk) CompactV2() {
+	fileIdx := d.Blocks[len(d.Blocks)-1]
+
+	for i := fileIdx; i >= 0; i-- {
+		var fileStartIdx, fileEndIdx int
+
+		for j := 0; j < len(d.Blocks); j++ {
+			if d.Blocks[j] == i {
+				fileStartIdx = j
+				break
+			}
+		}
+
+		for j := len(d.Blocks) - 1; j >= 0; j-- {
+			if d.Blocks[j] == i {
+				fileEndIdx = j
+				break
+			}
+		}
+
+		fileLength := fileEndIdx - fileStartIdx + 1
+
+		// Find consecutive empty blocks with length of fileLength
+		var emptyCount int
+		for j := 0; j < fileStartIdx; j++ {
+			if d.Blocks[j] == -1 {
+				emptyCount++
+			} else {
+				emptyCount = 0
+			}
+
+			if emptyCount == fileLength {
+				for k := j; k > j-fileLength; k-- {
+					d.Blocks[k] = i
+				}
+				for k := fileStartIdx; k <= fileEndIdx; k++ {
+					d.Blocks[k] = -1
+				}
+				break
+			}
+		}
+	}
+}
+
 func (d *Disk) ComputeChecksum() int {
 	var checksum int
 
