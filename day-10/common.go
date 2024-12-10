@@ -75,6 +75,32 @@ func (m Map) Traverse(row, col int) int {
 	return sum
 }
 
+func (m Map) TraverseDFS(row, col, currHeight int, visited [][]bool) int {
+	if row < 0 || row >= len(m.Heights) || col < 0 || col >= len(m.Heights[0]) {
+		return 0
+	}
+	if m.Heights[row][col] != currHeight {
+		return 0
+	}
+	if visited[row][col] {
+		return 0
+	}
+	if currHeight == 9 {
+		return 1
+	}
+
+	visited[row][col] = true
+
+	sum := 0
+	for _, d := range dir {
+		sum += m.TraverseDFS(row+d[0], col+d[1], currHeight+1, visited)
+	}
+
+	visited[row][col] = false
+
+	return sum
+}
+
 func ParseInput(fileName string) (Map, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
