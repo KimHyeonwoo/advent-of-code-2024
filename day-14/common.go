@@ -19,6 +19,10 @@ func (r *Robot) Move(width, height int) {
 	r.PositionCol = (r.PositionCol + r.VelocityCol + width) % width
 }
 
+func (r *Robot) MoveWidthTimes(width, height int) {
+	r.PositionRow = (r.PositionRow + r.VelocityRow*width + height*width) % height
+}
+
 func ParseInput(fileName string) ([]Robot, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
