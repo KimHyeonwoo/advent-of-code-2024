@@ -38,6 +38,45 @@ func (m Machine) GetPrize() (int64, bool) {
 	return cost, true
 }
 
+func (m Machine) GetActualPrize() (int64, bool) {
+	PrizeX := m.PrizeX + 10000000000000
+	PrizeY := m.PrizeY + 10000000000000
+
+	numerator := PrizeX*m.BY - PrizeY*m.BX
+	denominator := m.AX*m.BY - m.AY*m.BX
+
+	if denominator == 0 {
+		return 0, false
+	}
+
+	if numerator%denominator != 0 {
+		return 0, false
+	}
+
+	x := numerator / denominator
+	if x < 0 {
+		return 0, false
+	}
+
+	numerator = PrizeX - m.AX*x
+	denominator = m.BX
+
+	if denominator == 0 {
+		return 0, false
+	}
+
+	if numerator%denominator != 0 {
+		return 0, false
+	}
+
+	y := numerator / denominator
+	if y < 0 {
+		return 0, false
+	}
+
+	return 3*x + y, true
+}
+
 func ParseInput(fileName string) ([]Machine, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
