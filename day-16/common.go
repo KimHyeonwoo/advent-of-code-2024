@@ -61,14 +61,7 @@ var dirs = []Point{
 	{-1, 0},
 }
 
-func (m Maze) Solve() int {
-	// dp[i][j][k]: i,j 에서 dir 이 k 번째 일 때 cost
-	// dp[startRow][startCol][0] = 0
-	// dp[startRow][startCol][else] = 1000
-
-	// wall 이 아닌 방향으로 갈 수 있음
-	// 방향을 바꾸려면 cost 가 1000 이 더해짐
-
+func (m Maze) Solve() (int, int) {
 	dp := make([][][]int, m.Height)
 	for i := range dp {
 		dp[i] = make([][]int, m.Width)
@@ -109,41 +102,94 @@ func (m Maze) Solve() int {
 		cost := data.Cost
 		dir := data.Dir
 
-		for i, d := range dirs {
-			newRow := row + d.Row
-			newCol := col + d.Col
+		for i := range dirs {
+			if i == dir {
+				continue
+			}
 
-			newPointWithDir := PointWithDir{Point{newRow, newCol}, i}
+			newPointWithDir := PointWithDir{Point{row, col}, i}
 
 			if _, ok := visited[newPointWithDir]; ok {
 				continue
 			}
 
-			if m.Cells[newRow][newCol] == CellTypeWall {
-				continue
-			}
+			newCost := cost + 1000
 
-			newCost := cost
-			if i != dir {
-				newCost += 1000
-			}
-			newCost += 1
-
-			candidates = append(candidates, Data{Point{newRow, newCol}, i, newCost})
-			dp[newRow][newCol][i] = newCost
+			candidates = append(candidates, Data{Point{row, col}, i, newCost})
+			dp[row][col][i] = newCost
 			visited[newPointWithDir] = struct{}{}
 		}
+
+		newRow := row + dirs[dir].Row
+		newCol := col + dirs[dir].Col
+
+		newPointWithDir := PointWithDir{Point{newRow, newCol}, dir}
+
+		if _, ok := visited[newPointWithDir]; ok {
+			continue
+		}
+
+		if m.Cells[newRow][newCol] == CellTypeWall {
+			continue
+		}
+
+		newCost := cost + 1
+
+		candidates = append(candidates, Data{Point{newRow, newCol}, dir, newCost})
+		dp[newRow][newCol][dir] = newCost
+		visited[newPointWithDir] = struct{}{}
 	}
 
 	minCost := math.MaxInt
+	minCostDir := -1
 	for i := 0; i < 4; i++ {
 		currCost := dp[m.End.Row][m.End.Col][i]
 		if currCost != 0 && currCost < minCost {
 			minCost = dp[m.End.Row][m.End.Col][i]
+			minCostDir = i
 		}
 	}
 
-	return minCost
+	pointVisited := make(map[Point]struct{})
+	pointVisited[m.End] = struct{}{}
+	queue := make([]PointWithDir, 0)
+	queue = append(queue, PointWithDir{m.End, minCostDir})
+
+	for len(queue) > 0 {
+		p := queue[0]
+		queue = queue[1:]
+
+		row := p.Row
+		col := p.Col
+		dir := p.Dir
+		cost := dp[row][col][dir]
+
+		for i := range dirs {
+			if i == dir {
+				continue
+			}
+
+			if dp[row][col][i] == cost-1000 {
+				queue = append(queue, PointWithDir{Point{row, col}, i})
+				pointVisited[Point{row, col}] = struct{}{}
+			}
+		}
+
+		newRow := row - dirs[dir].Row
+		newCol := col - dirs[dir].Col
+
+		if dp[newRow][newCol][dir] == cost-1 {
+			queue = append(queue, PointWithDir{Point{newRow, newCol}, dir})
+			pointVisited[Point{newRow, newCol}] = struct{}{}
+		}
+	}
+
+	count := 0
+	for range pointVisited {
+		count++
+	}
+
+	return minCost, count
 }
 
 func ParseInput(fileName string) (Maze, error) {
