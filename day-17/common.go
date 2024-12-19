@@ -9,18 +9,18 @@ import (
 )
 
 type Computer struct {
-	RegisterA          int
-	RegisterB          int
-	RegisterC          int
-	InstructionPointer int
-	Instructions       []int
+	RegisterA          int64
+	RegisterB          int64
+	RegisterC          int64
+	InstructionPointer int64
+	Instructions       []int64
 }
 
-func (c *Computer) getLiteralOperand(operand int) int {
+func (c *Computer) getLiteralOperand(operand int64) int64 {
 	return operand
 }
 
-func (c *Computer) getComboOperand(operand int) int {
+func (c *Computer) getComboOperand(operand int64) int64 {
 	if operand <= 3 {
 		return operand
 	}
@@ -37,28 +37,10 @@ func (c *Computer) getComboOperand(operand int) int {
 	}
 }
 
-func (c *Computer) print() {
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("Register A:", c.RegisterA)
-	fmt.Println("Register B:", c.RegisterB)
-	fmt.Println("Register C:", c.RegisterC)
-	for i := 0; i < len(c.Instructions); i++ {
-		if i == c.InstructionPointer {
-			fmt.Print("[" + strconv.Itoa(c.Instructions[i]) + "]")
-		} else {
-			fmt.Print(c.Instructions[i])
-		}
-
-		if i < len(c.Instructions)-1 {
-			fmt.Print(",")
-		}
-	}
-	fmt.Println()
-}
-
-func (c *Computer) Execute() []int {
-	var results []int
-	for c.InstructionPointer < len(c.Instructions) {
+func (c *Computer) Execute() []int64 {
+	var results []int64
+	length := int64(len(c.Instructions))
+	for c.InstructionPointer < length {
 		operator := c.Instructions[c.InstructionPointer]
 		operand := c.Instructions[c.InstructionPointer+1]
 
@@ -145,7 +127,7 @@ func ParseInput(fileName string) (Computer, error) {
 			parts := strings.Split(strings.TrimPrefix(line, "Program: "), ",")
 			for _, part := range parts {
 				instruction, _ := strconv.Atoi(part)
-				computer.Instructions = append(computer.Instructions, instruction)
+				computer.Instructions = append(computer.Instructions, int64(instruction))
 			}
 		}
 	}
