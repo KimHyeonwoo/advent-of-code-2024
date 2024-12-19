@@ -8,33 +8,23 @@ import (
 
 type Towel string
 
-var trueCache = make(map[Towel]struct{})
-var falseCache = make(map[Towel]struct{})
-
-func (t Towel) CanConstruct(candidates []Towel) bool {
+func (t Towel) Construct(candidates []Towel) int {
 	if len(t) == 0 {
-		return true
+		return 0
 	}
 
-	if _, ok := trueCache[t]; ok {
-		return true
-	}
+	dp := make([]int, len(t)+1)
+	dp[0] = 1
 
-	if _, ok := falseCache[t]; ok {
-		return false
-	}
-
-	for _, candidate := range candidates {
-		if strings.HasPrefix(string(t), string(candidate)) {
-			if Towel(string(t)[len(candidate):]).CanConstruct(candidates) {
-				trueCache[t] = struct{}{}
-				return true
+	for i := 0; i <= len(t); i++ {
+		for _, candidate := range candidates {
+			if i+len(candidate) <= len(t) && t[i:i+len(candidate)] == candidate {
+				dp[i+len(candidate)] += dp[i]
 			}
 		}
 	}
 
-	falseCache[t] = struct{}{}
-	return false
+	return dp[len(t)]
 }
 
 func ParseInput(filename string) ([]Towel, []Towel, error) {

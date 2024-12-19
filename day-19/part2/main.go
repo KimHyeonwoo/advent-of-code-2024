@@ -12,12 +12,11 @@ func main() {
 		panic(err)
 	}
 
-	count := 0
+	var answer int
+
 	for _, target := range targets {
-		if c := target.Construct(candidates); c != 0 {
-			count++
-		}
+		answer += target.Construct(candidates)
 	}
 
-	fmt.Println(count) // 327
+	fmt.Println(answer) // 772696486795255
 }
