@@ -18,13 +18,14 @@ const (
 )
 
 type Maze struct {
-	Width    int
-	Height   int
-	Cells    [][]CellType
-	StartRow int
-	StartCol int
-	EndRow   int
-	EndCol   int
+	Width     int
+	Height    int
+	Cells     [][]CellType
+	StartRow  int
+	StartCol  int
+	EndRow    int
+	EndCol    int
+	Distances map[Point]int
 }
 
 func (m *Maze) Solve() int {
@@ -66,6 +67,7 @@ func (m *Maze) Solve() int {
 		}
 	}
 
+	m.Distances = distances
 	return distances[Point{m.EndRow, m.EndCol}]
 }
 
